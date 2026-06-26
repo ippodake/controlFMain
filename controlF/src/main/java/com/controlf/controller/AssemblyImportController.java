@@ -36,6 +36,13 @@ public ResponseEntity<List<VotingDTO>> getVotings(@PathVariable Long id) {
 
 
 
+    @PostMapping("/import-votings/{memberId}/selected")
+    public ResponseEntity<ImportResultDTO> importSelectedVotings(
+            @PathVariable Long memberId,
+            @RequestBody List<Long> selectedIds) {
+        return ResponseEntity.ok(assemblyImportService.importSelectedVotings(memberId, selectedIds));
+    }
+
     @PostMapping("/import-votings/{id}")
     public ResponseEntity<ImportResultDTO> importVotings(@PathVariable Long id) {
         return ResponseEntity.ok(assemblyImportService.importVotings(id));

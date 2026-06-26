@@ -88,6 +88,75 @@ return objectMapper.readValue(response.body(),
         objectMapper.getTypeFactory().constructCollectionType(List.class, VotingDTO.class));
     }
 
+    public ImportResultDTO importSelectedVotings(Long assemblyMemberId, List<Long> selectedIds) {
+        log.info("Iniciando importación seleccionada para assemblyMemberId={}", assemblyMemberId);
+
+        List<VotingDTO> votings;
+        try {
+            votings = getVotings(assemblyMemberId);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener votaciones: " + e.getMessage(), e);
+        }
+
+        int found = selectedIds == null ? 0 : selectedIds.size();
+        int imported = 0;
+        int ignored = 0;
+        int duplicates = 0;
+
+        AssemblyMemberDTO member = getAssemblyMembers().stream()
+                .filter(m -> assemblyMemberId.equals(m.getId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Asambleísta no encontrado: " + assemblyMemberId));
+
+        String nombre = (member.getFirstName() + " " + member.getLastname()).trim().toUpperCase();
+        Politico politico = politicoRepository.findByNombreCompletoContainingIgnoreCase(nombre)
+                .orElseThrow(() -> new RuntimeException("No se encontró político local para: " + nombre));
+
+        if (votings != null) {
+            DateTimeFormatter fmt = new DateTimeFormatterBuilder()
+                    .appendPattern("yyyy-MM-dd HH:mm:ss")
+                    .appendFraction(java.time.temporal.ChronoField.NANO_OF_SECOND, 0, 9, true)
+                    .toFormatter();
+            for (VotingDTO v : votings) {
+                if (selectedIds != null && !selectedIds.contains(v.getId())) {
+                    continue;
+                }
+                if (leyRepository.existsByExternalId(v.getId())) {
+                    duplicates++;
+                    log.debug("Duplicado omitido external_id={}", v.getId());
+                    continue;
+                }
+
+                LocalDateTime ldt = LocalDateTime.parse(v.getVotingDate(), fmt);
+
+                Ley ley = new Ley();
+                ley.setTitulo(truncate(v.getProposalDescription(), 255));
+                ley.setCodigo("AN-" + v.getId());
+                ley.setTipoExpediente("VOTACION_ASAMBLEA");
+                ley.setProponente(nombre);
+                ley.setDescripcionOriginal(v.getThemeDescription());
+                ley.setEstado(EstadoLey.DEBATE);
+                ley.setFechaIngreso(ldt.toLocalDate());
+                ley.setExternalId(v.getId());
+                ley = leyRepository.save(ley);
+
+                Voto voto = new Voto();
+                voto.setPolitico(politico);
+                voto.setLey(ley);
+                voto.setTipoVoto(mapVote(v.getDescription()));
+                voto.setAsistencia(true);
+                voto.setFechaVoto(ldt);
+                votoRepository.save(voto);
+
+                imported++;
+            }
+        }
+
+        log.info("Importación seleccionada finalizada: encontradas={} importadas={} ignoradas={} duplicadas={}",
+                found, imported, ignored, duplicates);
+        return new ImportResultDTO(found, imported, ignored, duplicates);
+    }
+
     public ImportResultDTO importVotings(Long assemblyMemberId) {
         log.info("Iniciando importación para assemblyMemberId={}", assemblyMemberId);
 
