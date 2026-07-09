@@ -122,9 +122,9 @@ public class LeyService {
         votoRepository.save(voto);
     }
 
-    public void addComentario(Integer leyId, ComentarioRequestDTO request) {
+    public void addComentario(Integer leyId, ComentarioRequestDTO request, Integer currentUserId) {
         Ley ley = leyRepository.findById(leyId).orElseThrow();
-        Usuario u = usuarioRepository.findById(request.getUsuarioId()).orElseThrow();
+        Usuario u = usuarioRepository.findById(currentUserId).orElseThrow();
 
         Comentario c = new Comentario();
         c.setTexto(request.getTexto());
@@ -137,9 +137,9 @@ public class LeyService {
         leyRepository.save(ley);
     }
 
-    public void addCalificacion(Integer leyId, CalificacionRequestDTO request) {
+    public void addCalificacion(Integer leyId, CalificacionRequestDTO request, Integer currentUserId) {
         Ley ley = leyRepository.findById(leyId).orElseThrow();
-        Usuario u = usuarioRepository.findById(request.getUsuarioId()).orElseThrow();
+        Usuario u = usuarioRepository.findById(currentUserId).orElseThrow();
 
         Calificacion cal = new Calificacion();
         cal.setPuntaje(request.getPuntaje());

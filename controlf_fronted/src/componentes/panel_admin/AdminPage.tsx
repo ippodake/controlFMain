@@ -98,7 +98,7 @@ const AdminPage: React.FC = () => {
       case 'BACKUP': endpoint = '/mantenimiento/respaldo'; break;
       case 'CACHE_CLEAR': endpoint = '/mantenimiento/limpiar-cache'; break;
       case 'IMPORT_LEYES': endpoint = '/importar-leyes'; break;
-      case 'IMPORT_POLITICOS': endpoint = '/import-politicos'; break;
+      default: return;
     }
 
     try {

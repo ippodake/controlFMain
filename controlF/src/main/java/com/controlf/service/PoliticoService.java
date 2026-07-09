@@ -171,9 +171,9 @@ public class PoliticoService {
         politicoRepository.save(p);
     }
 
-    public void addComentario(Integer politicoId, ComentarioRequestDTO request) {
+    public void addComentario(Integer politicoId, ComentarioRequestDTO request, Integer currentUserId) {
         Politico p = politicoRepository.findById(politicoId).orElseThrow();
-        Usuario u = usuarioRepository.findById(request.getUsuarioId()).orElseThrow();
+        Usuario u = usuarioRepository.findById(currentUserId).orElseThrow();
 
         Comentario c = new Comentario();
         c.setTexto(request.getTexto());
@@ -186,9 +186,9 @@ public class PoliticoService {
         politicoRepository.save(p);
     }
 
-    public void addCalificacion(Integer politicoId, CalificacionRequestDTO request) {
+    public void addCalificacion(Integer politicoId, CalificacionRequestDTO request, Integer currentUserId) {
         Politico p = politicoRepository.findById(politicoId).orElseThrow();
-        Usuario u = usuarioRepository.findById(request.getUsuarioId()).orElseThrow();
+        Usuario u = usuarioRepository.findById(currentUserId).orElseThrow();
 
         Calificacion cal = new Calificacion();
         cal.setPuntaje(request.getPuntaje());

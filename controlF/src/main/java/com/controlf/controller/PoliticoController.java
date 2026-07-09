@@ -1,6 +1,8 @@
 package com.controlf.controller;
 
-import com.controlf.dto.ActualizarCampoPoliticoRequestDTO;
+import com.controlf.auth.AuthenticatedUser;
+import com.controlf.db.repository.ComentarioRepository;
+import com.controlf.db.schema.Comentario;
 import com.controlf.dto.ActualizarCampoPoliticoRequestDTO;
 import com.controlf.dto.CalificacionRequestDTO;
 import com.controlf.dto.ComentarioRequestDTO;
@@ -8,6 +10,9 @@ import com.controlf.dto.SimpleItemDTO;
 import com.controlf.service.PoliticoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -20,6 +25,7 @@ import java.util.List;
 public class PoliticoController {
 
     private final PoliticoService politicoService;
+    private final ComentarioRepository comentarioRepository;
 
     @GetMapping("/{id}")
     public com.controlf.dto.PerfilPoliticoDTO getPolitico(@PathVariable Integer id) {
@@ -53,12 +59,37 @@ public class PoliticoController {
     }
 
     @PostMapping("/{id}/comentarios")
-    public void postComentario(@PathVariable Integer id, @Valid @RequestBody ComentarioRequestDTO request) {
-        politicoService.addComentario(id, request);
+    public void postComentario(@PathVariable Integer id, @Valid @RequestBody ComentarioRequestDTO request, Authentication authentication) {
+        Integer currentUserId = ((AuthenticatedUser) authentication.getPrincipal()).getId();
+        politicoService.addComentario(id, request, currentUserId);
     }
 
     @PostMapping("/{id}/calificaciones")
-    public void postCalificacion(@PathVariable Integer id, @Valid @RequestBody CalificacionRequestDTO request) {
-        politicoService.addCalificacion(id, request);
+    public void postCalificacion(@PathVariable Integer id, @Valid @RequestBody CalificacionRequestDTO request, Authentication authentication) {
+        Integer currentUserId = ((AuthenticatedUser) authentication.getPrincipal()).getId();
+        politicoService.addCalificacion(id, request, currentUserId);
+    }
+
+    @PatchMapping("/comentarios/{comentarioId}")
+    public ResponseEntity<Void> actualizarComentario(@PathVariable Integer comentarioId, @Valid @RequestBody ComentarioRequestDTO request, Authentication authentication) {
+        Comentario comentario = comentarioRepository.findById(comentarioId).orElseThrow();
+        AuthenticatedUser principal = (AuthenticatedUser) authentication.getPrincipal();
+        if (!principal.getRole().equals("ADMIN") && !comentario.getUsuario().getId().equals(principal.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        comentario.setTexto(request.getTexto());
+        comentarioRepository.save(comentario);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/comentarios/{comentarioId}")
+    public ResponseEntity<Void> eliminarComentario(@PathVariable Integer comentarioId, Authentication authentication) {
+        Comentario comentario = comentarioRepository.findById(comentarioId).orElseThrow();
+        AuthenticatedUser principal = (AuthenticatedUser) authentication.getPrincipal();
+        if (!principal.getRole().equals("ADMIN") && !comentario.getUsuario().getId().equals(principal.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        comentarioRepository.delete(comentario);
+        return ResponseEntity.ok().build();
     }
 }
