@@ -6,6 +6,7 @@ import com.controlf.db.schema.enums.ImpactoEsperado;
 import com.controlf.db.schema.enums.NivelCoherencia;
 import com.controlf.dto.PanelControlDTO;
 import com.controlf.dto.PanelMantenimientoDTO;
+import com.controlf.dto.ReporteHistoricoDTO;
 import com.controlf.dto.VinculoRequestDTO;
 import com.controlf.dto.MotorCoherenciaDataDTO;
 import com.controlf.dto.SimpleItemDTO;
@@ -34,6 +35,7 @@ public class AdminService {
     private final VinculoPromesaLeyRepository vinculoRepository;
     private final UsuarioRepository usuarioRepository;
     private final PoliticoRepository politicoRepository;
+    private final VotoRepository votoRepository;
 
     public MotorCoherenciaDataDTO getMotorData() {
         List<SimpleItemDTO> politicos = politicoRepository.findAll().stream()
@@ -81,6 +83,26 @@ public class AdminService {
 
     public void importarLeyes() {
         registrarLog("IMPORT_LEYES", "Sincronización con API externa iniciada");
+    }
+
+    public ReporteHistoricoDTO getHistoricoResumen() {
+        long totalLeyes = leyRepository.count();
+        long totalVotos = votoRepository.count();
+        long votosFavor = votoRepository.countByTipoVoto(com.controlf.db.schema.enums.TipoVoto.FAVOR);
+        long votosContra = votoRepository.countByTipoVoto(com.controlf.db.schema.enums.TipoVoto.CONTRA);
+        long votosAbstencion = votoRepository.countByTipoVoto(com.controlf.db.schema.enums.TipoVoto.ABSTENCION);
+        long leyesAprobadas = leyRepository.countByEstado(com.controlf.db.schema.enums.EstadoLey.APROBADA);
+        long leyesEnDebate = leyRepository.countByEstado(com.controlf.db.schema.enums.EstadoLey.DEBATE);
+
+        return ReporteHistoricoDTO.builder()
+                .totalLeyes(totalLeyes)
+                .totalVotos(totalVotos)
+                .votosFavor(votosFavor)
+                .votosContra(votosContra)
+                .votosAbstencion(votosAbstencion)
+                .leyesAprobadas(leyesAprobadas)
+                .leyesEnDebate(leyesEnDebate)
+                .build();
     }
 
     private void registrarLog(String accion, String detalles) {

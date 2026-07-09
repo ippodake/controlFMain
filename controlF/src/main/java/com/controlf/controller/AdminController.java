@@ -59,6 +59,11 @@ public class AdminController {
         adminService.limpiarCache();
     }
 
+    @GetMapping("/historico")
+    public com.controlf.dto.ReporteHistoricoDTO getHistorico() {
+        return adminService.getHistoricoResumen();
+    }
+
     @PostMapping("/importar-leyes")
     public void postImportarLeyes() {
         adminService.importarLeyes();

@@ -14,6 +14,27 @@ import java.util.List;
 @AllArgsConstructor
 public class Politico {
 
+    public Politico(Integer id, String nombreCompleto, String partidoPolitico, String cargoActual, String region,
+                    String comision, Boolean estaActivo, BigDecimal patrimonioDeclarado, String antecedentes,
+                    String fotoUrl, List<Promesa> promesas, List<Voto> votos, List<Comentario> comentarios,
+                    List<Calificacion> calificaciones) {
+        this.id = id;
+        this.nombreCompleto = nombreCompleto;
+        this.partidoPolitico = partidoPolitico;
+        this.cargoActual = cargoActual;
+        this.region = region;
+        this.comision = comision;
+        this.estaActivo = estaActivo;
+        this.patrimonioDeclarado = patrimonioDeclarado;
+        this.antecedentes = antecedentes;
+        this.fotoUrl = fotoUrl;
+        this.promesas = promesas;
+        this.votos = votos;
+        this.comentarios = comentarios;
+        this.calificaciones = calificaciones;
+        this.historialActualizaciones = null;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -30,6 +51,9 @@ public class Politico {
 
     @Column(columnDefinition = "TEXT")
     private String antecedentes;
+
+    @Column(columnDefinition = "TEXT")
+    private String historialActualizaciones;
 
     private String fotoUrl;
 

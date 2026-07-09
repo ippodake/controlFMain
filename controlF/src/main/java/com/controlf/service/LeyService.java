@@ -9,15 +9,18 @@ import com.controlf.db.schema.Calificacion;
 import com.controlf.db.schema.Comentario;
 import com.controlf.db.schema.Ley;
 import com.controlf.db.schema.Usuario;
+import com.controlf.db.schema.Voto;
 import com.controlf.db.schema.enums.EstadoLey;
 import com.controlf.db.schema.enums.TipoVoto;
 import com.controlf.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,6 +95,31 @@ public class LeyService {
         return leyRepository.findAll().stream()
                 .map(LeyService::mapToExpedienteDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void actualizarCategoriaLey(Integer leyId, CategoriaLeyRequestDTO request) {
+        Ley ley = leyRepository.findById(leyId).orElseThrow();
+        ley.setCategoria(request.getCategoria());
+        leyRepository.save(ley);
+    }
+
+    @Transactional
+    public void actualizarEstadoLey(Integer leyId, EstadoLeyRequestDTO request) {
+        Ley ley = leyRepository.findById(leyId).orElseThrow();
+        ley.setEstado(EstadoLey.valueOf(request.getEstado().toUpperCase(Locale.ROOT)));
+        leyRepository.save(ley);
+    }
+
+    @Transactional
+    public void actualizarAsistenciaVoto(Integer leyId, Integer votoId, AsistenciaVotoRequestDTO request) {
+        Ley ley = leyRepository.findById(leyId).orElseThrow();
+        Voto voto = votoRepository.findById(votoId).orElseThrow();
+        if (!ley.getId().equals(voto.getLey().getId())) {
+            throw new IllegalArgumentException("El voto no pertenece a la ley indicada");
+        }
+        voto.setAsistencia(request.getAsistencia());
+        votoRepository.save(voto);
     }
 
     public void addComentario(Integer leyId, ComentarioRequestDTO request) {
@@ -206,8 +234,25 @@ public class LeyService {
     private FiltrosLeyDTO buildFiltrosLeyDTO() {
         return FiltrosLeyDTO.builder()
                 .categorias(leyRepository.findDistinctCategorias())
-                .estados(java.util.Arrays.stream(EstadoLey.values()).map(Enum::name).collect(Collectors.toList()))
+                .estados(java.util.Arrays.stream(EstadoLey.values()).map(estado -> estado.name()).collect(Collectors.toList()))
                 .build();
+    }
+
+    private String classifyLaw(String titulo, String descripcion) {
+        String combined = ((titulo == null ? "" : titulo) + " " + (descripcion == null ? "" : descripcion)).toLowerCase(Locale.ROOT);
+        if (combined.contains("educ") || combined.contains("escuela") || combined.contains("universidad")) {
+            return "EDUCACION";
+        }
+        if (combined.contains("salud") || combined.contains("hospital") || combined.contains("medic")) {
+            return "SALUD";
+        }
+        if (combined.contains("trabajo") || combined.contains("empleo") || combined.contains("labor")) {
+            return "TRABAJO";
+        }
+        if (combined.contains("seguridad") || combined.contains("polic") || combined.contains("delito")) {
+            return "SEGURIDAD";
+        }
+        return "GENERAL";
     }
 
     private static ExpedienteLegislativoDTO mapToExpedienteDTO(Ley ley) {

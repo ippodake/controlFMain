@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
-import java.util.List;
-
 @RestController
 @CrossOrigin("*")
 @RequestMapping("/api/leyes")
@@ -35,6 +33,21 @@ public class LeyController {
             @RequestParam(required = false) String categoria,
             @RequestParam(required = false) String estado) {
         return leyService.getLeyesFiltradas(pagina, size, termino, categoria, estado);
+    }
+
+    @PatchMapping("/{id}/categoria")
+    public void actualizarCategoria(@PathVariable Integer id, @Valid @RequestBody CategoriaLeyRequestDTO request) {
+        leyService.actualizarCategoriaLey(id, request);
+    }
+
+    @PatchMapping("/{id}/estado")
+    public void actualizarEstado(@PathVariable Integer id, @Valid @RequestBody EstadoLeyRequestDTO request) {
+        leyService.actualizarEstadoLey(id, request);
+    }
+
+    @PatchMapping("/{id}/votos/{votoId}/asistencia")
+    public void actualizarAsistencia(@PathVariable Integer id, @PathVariable Integer votoId, @Valid @RequestBody AsistenciaVotoRequestDTO request) {
+        leyService.actualizarAsistenciaVoto(id, votoId, request);
     }
 
     @PostMapping("/{id}/comentarios")

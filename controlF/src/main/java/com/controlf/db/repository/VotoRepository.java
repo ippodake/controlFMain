@@ -12,4 +12,5 @@ public interface VotoRepository extends JpaRepository<Voto, Integer> {
     List<Voto> findByPoliticoId(Integer politicoId);
 
     long countByLeyIdAndTipoVoto(Integer leyId, TipoVoto tipoVoto);
+    long countByTipoVoto(TipoVoto tipoVoto);
 }

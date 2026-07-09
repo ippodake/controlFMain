@@ -137,6 +137,7 @@ return objectMapper.readValue(response.body(),
                 ley.setTipoExpediente("VOTACION_ASAMBLEA");
                 ley.setProponente(nombre);
                 ley.setDescripcionOriginal(v.getThemeDescription());
+                ley.setCategoria(classifyLaw(ley.getTitulo(), ley.getDescripcionOriginal()));
                 ley.setEstado(EstadoLey.DEBATE);
                 ley.setFechaIngreso(ldt.toLocalDate());
                 ley.setExternalId(v.getId());
@@ -247,6 +248,7 @@ return objectMapper.readValue(response.body(),
                 ley.setTipoExpediente("VOTACION_ASAMBLEA");
                 ley.setProponente(nombre);
                 ley.setDescripcionOriginal(v.getThemeDescription());
+                ley.setCategoria(classifyLaw(ley.getTitulo(), ley.getDescripcionOriginal()));
                 ley.setEstado(EstadoLey.DEBATE);
                 ley.setFechaIngreso(ldt.toLocalDate());
                 ley.setExternalId(v.getId());
@@ -267,6 +269,23 @@ return objectMapper.readValue(response.body(),
         log.info("Importación finalizada: encontradas={} importadas={} ignoradas={} duplicadas={}",
                 found, imported, ignored, duplicates);
         return new ImportResultDTO(found, imported, ignored, duplicates);
+    }
+
+    private String classifyLaw(String titulo, String descripcion) {
+        String combined = ((titulo == null ? "" : titulo) + " " + (descripcion == null ? "" : descripcion)).toLowerCase();
+        if (combined.contains("educ") || combined.contains("escuela") || combined.contains("universidad")) {
+            return "EDUCACION";
+        }
+        if (combined.contains("salud") || combined.contains("hospital") || combined.contains("medic")) {
+            return "SALUD";
+        }
+        if (combined.contains("trabajo") || combined.contains("empleo") || combined.contains("labor")) {
+            return "TRABAJO";
+        }
+        if (combined.contains("seguridad") || combined.contains("polic") || combined.contains("delito")) {
+            return "SEGURIDAD";
+        }
+        return "GENERAL";
     }
 
     private TipoVoto mapVote(String description) {

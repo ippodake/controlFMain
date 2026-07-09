@@ -1,7 +1,8 @@
 package com.controlf.controller;
 
+import com.controlf.dto.ActualizarCampoPoliticoRequestDTO;
+import com.controlf.dto.ActualizarCampoPoliticoRequestDTO;
 import com.controlf.dto.CalificacionRequestDTO;
-import com.controlf.dto.CartaPoliticoDTO;
 import com.controlf.dto.ComentarioRequestDTO;
 import com.controlf.dto.SimpleItemDTO;
 import com.controlf.service.PoliticoService;
@@ -44,6 +45,11 @@ public class PoliticoController {
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String comision) {
         return politicoService.getPoliticosFiltrados(pagina, size, nombre, partido, region, comision);
+    }
+
+    @PatchMapping("/{id}")
+    public void actualizarCampo(@PathVariable Integer id, @Valid @RequestBody ActualizarCampoPoliticoRequestDTO request) {
+        politicoService.actualizarCampoPolitico(id, request);
     }
 
     @PostMapping("/{id}/comentarios")

@@ -3,17 +3,24 @@ package com.controlf.service;
 import com.controlf.db.repository.*;
 import com.controlf.db.schema.Calificacion;
 import com.controlf.db.schema.Comentario;
+import com.controlf.db.schema.Politico;
+import com.controlf.db.schema.Usuario;
+import com.controlf.dto.ActualizarCampoPoliticoRequestDTO;
 import com.controlf.dto.CalificacionRequestDTO;
 import com.controlf.dto.CartaPoliticoDTO;
 import com.controlf.dto.ComentarioRequestDTO;
-import com.controlf.db.schema.Politico;
-import com.controlf.db.schema.Usuario;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,11 +29,11 @@ public class PoliticoService {
 
     private final PoliticoRepository politicoRepository;
     private final VinculoPromesaLeyRepository vinculoRepository;
-    private final LeyRepository leyRepository;
     private final ComentarioRepository comentarioRepository;
     private final CalificacionRepository calificacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final ConfiguracionRepository configuracionRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public com.controlf.dto.PerfilPoliticoDTO getPoliticoProfile(Integer id) {
         Politico p = politicoRepository.findById(id).orElseThrow();
@@ -140,6 +147,30 @@ public class PoliticoService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public void actualizarCampoPolitico(Integer politicoId, ActualizarCampoPoliticoRequestDTO request) {
+        Politico p = politicoRepository.findById(politicoId).orElseThrow();
+
+        String campo = request.getCampo() == null ? "" : request.getCampo().trim().toLowerCase();
+        String valor = request.getValor();
+
+        String valorAnterior = null;
+        switch (campo) {
+            case "patrimonio" -> {
+                valorAnterior = p.getPatrimonioDeclarado() == null ? null : p.getPatrimonioDeclarado().toPlainString();
+                p.setPatrimonioDeclarado(new BigDecimal(valor));
+            }
+            case "antecedentes" -> {
+                valorAnterior = p.getAntecedentes();
+                p.setAntecedentes(valor);
+            }
+            default -> throw new IllegalArgumentException("Campo no soportado: " + campo);
+        }
+
+        p.setHistorialActualizaciones(appendHistorialEntry(p.getHistorialActualizaciones(), campo, valorAnterior, valor));
+        politicoRepository.save(p);
+    }
+
     public void addComentario(Integer politicoId, ComentarioRequestDTO request) {
         Politico p = politicoRepository.findById(politicoId).orElseThrow();
         Usuario u = usuarioRepository.findById(request.getUsuarioId()).orElseThrow();
@@ -189,6 +220,30 @@ public class PoliticoService {
                 .id(p.getId().toString())
                 .label(p.getNombreCompleto())
                 .build();
+    }
+
+    private String appendHistorialEntry(String currentJson, String campo, String valorAnterior, String valorNuevo) {
+        List<Map<String, Object>> entries = new ArrayList<>();
+        if (currentJson != null && !currentJson.isBlank()) {
+            try {
+                entries = objectMapper.readValue(currentJson, new TypeReference<>() {});
+            } catch (Exception ignored) {
+                entries = new ArrayList<>();
+            }
+        }
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("fecha", LocalDateTime.now().toString());
+        entry.put("campo", campo);
+        entry.put("valorAnterior", valorAnterior);
+        entry.put("valorNuevo", valorNuevo);
+        entries.add(entry);
+
+        try {
+            return objectMapper.writeValueAsString(entries);
+        } catch (Exception e) {
+            return currentJson;
+        }
     }
 
     private String determineEstadoEtiqueta(Double coherencia) {

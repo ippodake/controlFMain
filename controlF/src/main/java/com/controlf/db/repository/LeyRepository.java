@@ -1,6 +1,7 @@
 package com.controlf.db.repository;
 
 import com.controlf.db.schema.Ley;
+import com.controlf.db.schema.enums.EstadoLey;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
@@ -15,6 +16,8 @@ public interface LeyRepository extends JpaRepository<Ley, Integer>, JpaSpecifica
     Optional<Ley> findByExternalId(Long externalId);
 
     long countByProponente(String proponente);
+
+    long countByEstado(EstadoLey estado);
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT l.categoria FROM Ley l WHERE l.categoria IS NOT NULL")
     java.util.List<String> findDistinctCategorias();
