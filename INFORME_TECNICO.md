@@ -3,7 +3,9 @@
 ## 1. Resumen
 
 - Objetivo del proyecto: construir una plataforma de auditoría ciudadana para visualizar leyes, políticos y su coherencia legislativa, con un panel administrativo y un flujo de importación de datos desde la Asamblea Nacional. Esta intención es observable en los controladores, servicios y páginas del frontend.
-- Estado actual y porcentaje aproximado de avance: el proyecto presenta una base funcional avanzada para un MVP. Tras las mejoras verificadas, el avance funcional se estima en torno al 80–85%. El backend compila y prueba correctamente, y el frontend compila correctamente tras corregir los errores de TypeScript.
+- Estado actual y porcentaje aproximado de avance: el proyecto presenta una base funcional avanzada para un MVP. Tras las mejoras verificadas, el avance funcional se estima en torno al 85–90%. El backend compila y prueba correctamente, y el frontend compila correctamente tras corregir los errores de TypeScript.
+- Cambios recientes del backend: se consolidaron cinco funcionalidades de negocio reutilizando el modelo existente: historial de actualizaciones para políticos, clasificación/cambio de categoría de leyes, actualización del estado real de una ley, registro de asistencia a votaciones y un resumen histórico de leyes y votos. La suite de regresión quedó en verde y se desactivó el poblado automático al arrancar la aplicación.
+- Cambios recientes del frontend: se incorporó una UI mínima funcional para editar patrimonio/antecedentes del político, gestionar categoría/estado de una ley y actualizar asistencia de votos desde los endpoints reales. También se agregó un bloque de reporte histórico en el panel administrativo.
 - Principales fortalezas:
   - Separación clara entre capas en el backend: controladores, servicios, repositorios y DTOs.
   - Modelo de dominio visible para leyes, políticos, promesas, votos, comentarios y coherencia.
@@ -16,7 +18,7 @@
   - Queda lógica de negocio y mapeo DTO mezclada en algunos servicios.
   - El flujo de seguridad aún es muy básico para un sistema con datos sensibles.
 
-> Verificación realizada: el backend compila y ejecuta las pruebas con ./gradlew test, y el frontend compila con npm run build.
+> Verificación realizada: el backend compila y ejecuta las pruebas con ./gradlew test, y el frontend compila con npm run build. Verificación reciente del bloque backend: ./gradlew test --tests com.controlf.backend.BackendWorkflowTests -> BUILD SUCCESSFUL. Verificación reciente del frontend: npm run build en controlf_fronted -> BUILD SUCCESSFUL.
 
 ## 2. Arquitectura
 
@@ -93,7 +95,21 @@ Frontend React/Vite
 
 Observación verificable: estos módulos existen y están conectados a endpoints reales del backend.
 
-## 6. Frontend
+## 6. Cambios recientes del backend y frontend (julio 2026)
+
+- Historial de patrimonio/antecedentes del político: se implementó el registro de cambios en un campo de texto estructurado en JSON, reutilizando el esquema existente de [controlF/src/main/java/com/controlf/db/schema/Politico.java](controlF/src/main/java/com/controlf/db/schema/Politico.java) y la actualización en [controlF/src/main/java/com/controlf/service/PoliticoService.java](controlF/src/main/java/com/controlf/service/PoliticoService.java).
+- Clasificación de leyes por categoría: se reutilizó el campo existente de categoría en [controlF/src/main/java/com/controlf/db/schema/Ley.java](controlF/src/main/java/com/controlf/db/schema/Ley.java) y se expuso su actualización desde [controlF/src/main/java/com/controlf/controller/LeyController.java](controlF/src/main/java/com/controlf/controller/LeyController.java) y [controlF/src/main/java/com/controlf/service/LeyService.java](controlF/src/main/java/com/controlf/service/LeyService.java).
+- Estado real de la ley: se incorporó la actualización del estado usando el enum existente [controlF/src/main/java/com/controlf/db/schema/enums/EstadoLey.java](controlF/src/main/java/com/controlf/db/schema/enums/EstadoLey.java) a través del mismo flujo de servicio/controlador.
+- Asistencia a votaciones: se reutilizó el campo asistencia en [controlF/src/main/java/com/controlf/db/schema/Voto.java](controlF/src/main/java/com/controlf/db/schema/Voto.java) para permitir su actualización por ley y voto.
+- Reporte histórico: se añadió la agregación de totales y conteos por estado/tipo de voto desde [controlF/src/main/java/com/controlf/service/AdminService.java](controlF/src/main/java/com/controlf/service/AdminService.java), expuesta en [controlF/src/main/java/com/controlf/controller/AdminController.java](controlF/src/main/java/com/controlf/controller/AdminController.java).
+- Poblado inicial al arrancar la app: se desactivó el seed automático en [controlF/src/main/java/com/controlf/ControlFApplication.java](controlF/src/main/java/com/controlf/ControlFApplication.java) para evitar datos de ejemplo al iniciar el sistema. Para pruebas se añadió configuración específica en [controlF/build.gradle.kts](controlF/build.gradle.kts) y [controlF/src/test/resources/application.properties](controlF/src/test/resources/application.properties).
+- Pruebas de regresión: se añadió y verificó [controlF/src/test/java/com/controlf/backend/BackendWorkflowTests.java](controlF/src/test/java/com/controlf/backend/BackendWorkflowTests.java), que cubre historial, categoría/estado y resumen histórico.
+- UI mínima operativa: se implementó edición básica desde la interfaz para los siguientes flujos conectados a los endpoints reales:
+  - [controlf_fronted/src/componentes/perfil_politico_screen/PerfilPoliticoPage.tsx](controlf_fronted/src/componentes/perfil_politico_screen/PerfilPoliticoPage.tsx): edición de patrimonio y antecedentes del político.
+  - [controlf_fronted/src/componentes/perfil_ley/PerfilLeyPage.tsx](controlf_fronted/src/componentes/perfil_ley/PerfilLeyPage.tsx): edición de categoría, estado y asistencia a votaciones de una ley.
+  - [controlf_fronted/src/componentes/panel_admin/AdminPage.tsx](controlf_fronted/src/componentes/panel_admin/AdminPage.tsx): visualización del reporte histórico agregado en tarjetas.
+
+## 7. Frontend
 
 - Páginas:
   - [controlf_fronted/src/componentes/DashboardPage.tsx](controlf_fronted/src/componentes/DashboardPage.tsx)
@@ -135,6 +151,9 @@ Observación verificable: estos módulos existen y están conectados a endpoints
   - Cálculo de coherencia y métricas básicas.
   - Importación masiva de datos desde la Asamblea.
   - Gestión administrativa básica.
+  - Actualización de categoría, estado y asistencia en leyes/votos.
+  - Registro de historial de cambios para datos de políticos.
+  - Resumen histórico y agregaciones administrativas.
 - Repositorios:
   - Se usa Spring Data JPA a través de interfaces como [controlF/src/main/java/com/controlf/db/repository/LeyRepository.java](controlF/src/main/java/com/controlf/db/repository/LeyRepository.java) y [controlF/src/main/java/com/controlf/db/repository/PoliticoRepository.java](controlF/src/main/java/com/controlf/db/repository/PoliticoRepository.java).
 - Entidades:

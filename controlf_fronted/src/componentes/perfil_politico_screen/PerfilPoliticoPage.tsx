@@ -11,6 +11,11 @@ const PerfilPoliticoPage: React.FC = () => {
   const navigate = useNavigate();
   const [perfil, setPerfil] = useState<PerfilPolitico | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [campoEdicion, setCampoEdicion] = useState<'patrimonio' | 'antecedentes'>('patrimonio');
+  const [valorEdicion, setValorEdicion] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [mensajeEdicion, setMensajeEdicion] = useState<string | null>(null);
+  const [historialCambios, setHistorialCambios] = useState<Array<{ campo: string; valor: string; fecha: string }>>([]);
 
   const fetchPerfil = async () => {
     setIsLoading(true);
@@ -33,23 +38,57 @@ const PerfilPoliticoPage: React.FC = () => {
 
   const handleAddComentario = async (texto: string, puntaje: number) => {
     try {
-      // POST Comentario
       await fetch(`/api/politicos/${id}/comentarios`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto, usuarioId: 1 }) // Usuario hardcodeado temporalmente hasta tener auth
+        body: JSON.stringify({ texto, usuarioId: 1 })
       });
 
-      // POST Calificación
       await fetch(`/api/politicos/${id}/calificaciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ puntaje, usuarioId: 1 })
       });
 
-      fetchPerfil(); // Recargar datos
+      fetchPerfil();
     } catch (error) {
       console.error("Error al publicar comentario:", error);
+    }
+  };
+
+  const handleEditarPolitico = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!id || !valorEdicion.trim()) return;
+
+    setIsSaving(true);
+    setMensajeEdicion(null);
+
+    try {
+      const response = await fetch(`/api/politicos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campo: campoEdicion, valor: valorEdicion.trim() })
+      });
+
+      if (!response.ok) throw new Error('No se pudo actualizar el campo');
+
+      const fecha = new Date().toLocaleString('es-EC', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      setHistorialCambios((prev) => [{ campo: campoEdicion, valor: valorEdicion.trim(), fecha }, ...prev]);
+      setValorEdicion('');
+      setMensajeEdicion(`Cambio guardado en ${campoEdicion === 'patrimonio' ? 'patrimonio' : 'antecedentes'}.`);
+      await fetchPerfil();
+    } catch (error) {
+      console.error('Error al actualizar político:', error);
+      setMensajeEdicion('No se pudo guardar el cambio.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -84,6 +123,64 @@ const PerfilPoliticoPage: React.FC = () => {
         estaActivo={perfil.estaActivo}
         antecedentes={perfil.antecedentes}
       />
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-black text-primary-navy">Actualizar patrimonio o antecedentes</h3>
+            <p className="text-sm text-slate-500">Edición mínima conectada al endpoint real del político.</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleEditarPolitico} className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-[180px_1fr_auto]">
+            <select
+              value={campoEdicion}
+              onChange={(event) => setCampoEdicion(event.target.value as 'patrimonio' | 'antecedentes')}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-accent-blue focus:outline-none"
+            >
+              <option value="patrimonio">Patrimonio</option>
+              <option value="antecedentes">Antecedentes</option>
+            </select>
+
+            <input
+              type="text"
+              value={valorEdicion}
+              onChange={(event) => setValorEdicion(event.target.value)}
+              placeholder={campoEdicion === 'patrimonio' ? 'Ej. 1500000' : 'Nuevo texto de antecedentes'}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-accent-blue focus:outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="rounded-xl bg-primary-navy px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              {isSaving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+
+          {mensajeEdicion && (
+            <p className="text-sm text-success-green">{mensajeEdicion}</p>
+          )}
+        </form>
+
+        {historialCambios.length > 0 && (
+          <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <h4 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Historial reciente</h4>
+            <ul className="space-y-2 text-sm text-slate-600">
+              {historialCambios.map((item, index) => (
+                <li key={`${item.campo}-${index}`} className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-primary-navy">{item.campo}</span>
+                  <span>→</span>
+                  <span>{item.valor}</span>
+                  <span className="text-slate-400">({item.fecha})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       <MetricaCoherencia 
         porcentaje={perfil.porcentajeCoherencia}

@@ -6,6 +6,7 @@ import MantenimientoSistema from './COMPONENTE_MANTENIMIENTO_DEL_SISTEMA/Manteni
 const AdminPage: React.FC = () => {
   const [seguridad, setSeguridad] = useState<any>(null);
   const [mantenimiento, setMantenimiento] = useState<any>(null);
+  const [historico, setHistorico] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [assemblyMembers, setAssemblyMembers] = useState<any[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState('');
@@ -27,13 +28,15 @@ const AdminPage: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [segRes, mantRes] = await Promise.all([
+      const [segRes, mantRes, historicoRes] = await Promise.all([
         fetch('/api/admin/panel'),
-        fetch('/api/admin/mantenimiento')
+        fetch('/api/admin/mantenimiento'),
+        fetch('/api/admin/historico')
       ]);
 
       setSeguridad(await segRes.json());
       setMantenimiento(await mantRes.json());
+      setHistorico(await historicoRes.json());
     } catch (error) {
       console.error("Error al cargar datos administrativos:", error);
     } finally {
@@ -268,6 +271,30 @@ const AdminPage: React.FC = () => {
       />
 
       <MotorCoherencia />
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+        <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+          <h4 className="text-sm font-bold text-primary-navy uppercase tracking-wide">Reporte histórico agregado</h4>
+        </div>
+        <div className="p-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total de leyes</p>
+            <p className="mt-2 text-3xl font-black text-primary-navy">{historico?.totalLeyes ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total de votos</p>
+            <p className="mt-2 text-3xl font-black text-primary-navy">{historico?.totalVotos ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Votos a favor / contra</p>
+            <p className="mt-2 text-lg font-black text-primary-navy">{historico?.votosFavor ?? 0} / {historico?.votosContra ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Leyes aprobadas / en debate</p>
+            <p className="mt-2 text-lg font-black text-primary-navy">{historico?.leyesAprobadas ?? 0} / {historico?.leyesEnDebate ?? 0}</p>
+          </div>
+        </div>
+      </div>
 
       <MantenimientoSistema
         info={mantenimiento}
