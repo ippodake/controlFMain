@@ -1,4 +1,4 @@
-interface ItemNavegacion {
+export interface ItemNavegacion {
   id: string;           // Identificador único del item
   label: string;        // Texto del item de navegación
   icono: string;        // Nombre o referencia del ícono

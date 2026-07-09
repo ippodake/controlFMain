@@ -33,10 +33,7 @@ public class LeyService {
     private static final int CALIFICACION_MAXIMA = 5;
 
     public FiltrosLeyDTO getFiltros() {
-        return FiltrosLeyDTO.builder()
-                .categorias(leyRepository.findDistinctCategorias())
-                .estados(java.util.Arrays.stream(EstadoLey.values()).map(Enum::name).collect(Collectors.toList()))
-                .build();
+        return buildFiltrosLeyDTO();
     }
 
     public GrillaLeyesDTO getLeyesFiltradas(int pagina, int size, String termino, String categoria, String estado) {
@@ -63,7 +60,7 @@ public class LeyService {
             org.springframework.data.domain.Page<Ley> page = leyRepository.findAll(spec, org.springframework.data.domain.PageRequest.of(Math.max(0, pagina - 1), size));
 
             List<ExpedienteLegislativoDTO> leyes = page.getContent().stream()
-                    .map(this::mapToExpedienteDTO)
+                    .map(LeyService::mapToExpedienteDTO)
                     .collect(Collectors.toList());
 
             return GrillaLeyesDTO.builder()
@@ -93,7 +90,7 @@ public class LeyService {
 
     public List<ExpedienteLegislativoDTO> getAllLeyesAsExpedientes() {
         return leyRepository.findAll().stream()
-                .map(this::mapToExpedienteDTO)
+                .map(LeyService::mapToExpedienteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -206,7 +203,14 @@ public class LeyService {
                 .build();
     }
 
-    private ExpedienteLegislativoDTO mapToExpedienteDTO(Ley ley) {
+    private FiltrosLeyDTO buildFiltrosLeyDTO() {
+        return FiltrosLeyDTO.builder()
+                .categorias(leyRepository.findDistinctCategorias())
+                .estados(java.util.Arrays.stream(EstadoLey.values()).map(Enum::name).collect(Collectors.toList()))
+                .build();
+    }
+
+    private static ExpedienteLegislativoDTO mapToExpedienteDTO(Ley ley) {
         return ExpedienteLegislativoDTO.builder()
                 .id(ley.getId().toString())
                 .codigoExpediente(ley.getCodigo())

@@ -2,6 +2,7 @@ package com.controlf.controller;
 
 import com.controlf.dto.*;
 import com.controlf.service.LeyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -37,12 +38,12 @@ public class LeyController {
     }
 
     @PostMapping("/{id}/comentarios")
-    public void postComentario(@PathVariable Integer id, @RequestBody ComentarioRequestDTO request) {
+    public void postComentario(@PathVariable Integer id, @Valid @RequestBody ComentarioRequestDTO request) {
         leyService.addComentario(id, request);
     }
 
     @PostMapping("/{id}/calificaciones")
-    public void postCalificacion(@PathVariable Integer id, @RequestBody CalificacionRequestDTO request) {
+    public void postCalificacion(@PathVariable Integer id, @Valid @RequestBody CalificacionRequestDTO request) {
         leyService.addCalificacion(id, request);
     }
 }

@@ -13,7 +13,7 @@ export interface DebateCiudadano {
   titulo: string;
   puntuacionPromedio: number;
   puntuacionMaxima: number;
-  comentarios: ComentarioDebate[];
+  comentarios: import('./Comentario Debate/type_comentario_debate').ComentarioDebate[];
   placeholderComentario: string;
   tieneBotonEnviar: boolean;
 }

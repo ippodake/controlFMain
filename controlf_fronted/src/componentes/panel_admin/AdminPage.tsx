@@ -17,6 +17,10 @@ const AdminPage: React.FC = () => {
   const [isLoadingVotings, setIsLoadingVotings] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
+  const [importablePoliticos, setImportablePoliticos] = useState<Array<{ id: string; label: string }>>([]);
+  const [selectedPoliticoIds, setSelectedPoliticoIds] = useState<string[]>([]);
+  const [isImportingPoliticos, setIsImportingPoliticos] = useState(false);
+  const [politicoImportResult, setPoliticoImportResult] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -52,7 +56,18 @@ const AdminPage: React.FC = () => {
       }
     };
 
+    const loadImportablePoliticos = async () => {
+      try {
+        const response = await fetch('/api/politicos/importables');
+        const data = await response.json();
+        setImportablePoliticos(data || []);
+      } catch (error) {
+        console.error('Error al cargar políticos importables:', error);
+      }
+    };
+
     loadAssemblyMembers();
+    loadImportablePoliticos();
   }, []);
 
   const handleAccionMantenimiento = async (accion: string) => {
@@ -177,6 +192,33 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const togglePoliticoSelection = (politicoId: string) => {
+    setSelectedPoliticoIds((current) =>
+      current.includes(politicoId)
+        ? current.filter((id) => id !== politicoId)
+        : [...current, politicoId]
+    );
+  };
+
+  const handleImportLeyesPorPoliticos = async () => {
+    if (selectedPoliticoIds.length === 0) return;
+
+    try {
+      setIsImportingPoliticos(true);
+      const response = await fetch('/admin/import-leyes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ politicoIds: selectedPoliticoIds.map((id) => Number(id)) })
+      });
+      const data = await response.json();
+      setPoliticoImportResult(data);
+    } catch (error) {
+      console.error('Error al importar leyes por candidatos:', error);
+    } finally {
+      setIsImportingPoliticos(false);
+    }
+  };
+
   const getVoteBadgeClass = (description: string) => {
     const normalized = (description || '').trim().toUpperCase();
     if (normalized === 'SI') return 'bg-emerald-100 text-emerald-700 border-emerald-200';
@@ -236,7 +278,7 @@ const AdminPage: React.FC = () => {
         <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
           <h4 className="text-sm font-bold text-primary-navy uppercase tracking-wide flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
-            IMPORTACIÓN DE VOTACIONES
+            IMPORTACIÓN DE VOTACIONES Y LEYES
           </h4>
         </div>
 
@@ -283,8 +325,46 @@ const AdminPage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
+            <label className="text-xs font-bold text-slate-500 uppercase">2. SELECCIONAR CANDIDATOS PARA IMPORTAR LEYES</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {importablePoliticos.map((politico) => {
+                const isSelected = selectedPoliticoIds.includes(politico.id);
+                return (
+                  <label key={politico.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => togglePoliticoSelection(politico.id)}
+                      className="h-4 w-4 rounded border-slate-300 text-accent-blue focus:ring-accent-blue"
+                    />
+                    <span className="text-sm text-slate-700">{politico.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={handleImportLeyesPorPoliticos}
+              disabled={isImportingPoliticos || selectedPoliticoIds.length === 0}
+              className="px-6 py-3 bg-primary-navy text-white rounded-xl text-sm font-black hover:bg-slate-800 transition-all shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isImportingPoliticos ? 'IMPORTANDO...' : 'IMPORTAR LEYES PARA CANDIDATOS SELECCIONADOS'}
+            </button>
+            {politicoImportResult && (
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-white rounded-xl border border-slate-200"><p className="text-[10px] font-bold text-slate-500 uppercase">SOLICITADOS</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.found}</p></div>
+                  <div className="p-4 bg-white rounded-xl border border-slate-200"><p className="text-[10px] font-bold text-slate-500 uppercase">IMPORTADAS</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.imported}</p></div>
+                  <div className="p-4 bg-white rounded-xl border border-slate-200"><p className="text-[10px] font-bold text-slate-500 uppercase">IGNORADAS</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.ignored}</p></div>
+                  <div className="p-4 bg-white rounded-xl border border-slate-200"><p className="text-[10px] font-bold text-slate-500 uppercase">DUPLICADAS</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.duplicates}</p></div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
-              <label className="text-xs font-bold text-slate-500 uppercase">2. SELECCIONAR VOTACIONES A IMPORTAR</label>
+              <label className="text-xs font-bold text-slate-500 uppercase">3. SELECCIONAR VOTACIONES A IMPORTAR</label>
               <div className="flex gap-2">
                 <button
                   type="button"

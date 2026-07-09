@@ -9,7 +9,7 @@ const DirectorioPoliticosPage: React.FC = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
-  const [filtros, setFiltros] = useState([
+  const [filtros, setFiltros] = useState<Array<{ id: string; label: string; valorSeleccionado: string | null; opciones: string[] }>>([
     { id: 'partido', label: 'Partido Político', valorSeleccionado: null, opciones: [] },
     { id: 'provincia', label: 'Provincia / Región', valorSeleccionado: null, opciones: [] },
     { id: 'comision', label: 'Comisión Legislativa', valorSeleccionado: null, opciones: [] },

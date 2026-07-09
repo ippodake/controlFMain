@@ -3,7 +3,9 @@ package com.controlf.controller;
 import com.controlf.dto.CalificacionRequestDTO;
 import com.controlf.dto.CartaPoliticoDTO;
 import com.controlf.dto.ComentarioRequestDTO;
+import com.controlf.dto.SimpleItemDTO;
 import com.controlf.service.PoliticoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,6 +30,11 @@ public class PoliticoController {
         return politicoService.getFiltros();
     }
 
+    @GetMapping("/importables")
+    public List<SimpleItemDTO> getImportables() {
+        return politicoService.getPoliticosImportables();
+    }
+
     @GetMapping
     public com.controlf.dto.GrillaPoliticosDTO getPoliticos(
             @RequestParam(defaultValue = "1") int pagina,
@@ -40,12 +47,12 @@ public class PoliticoController {
     }
 
     @PostMapping("/{id}/comentarios")
-    public void postComentario(@PathVariable Integer id, @RequestBody ComentarioRequestDTO request) {
+    public void postComentario(@PathVariable Integer id, @Valid @RequestBody ComentarioRequestDTO request) {
         politicoService.addComentario(id, request);
     }
 
     @PostMapping("/{id}/calificaciones")
-    public void postCalificacion(@PathVariable Integer id, @RequestBody CalificacionRequestDTO request) {
+    public void postCalificacion(@PathVariable Integer id, @Valid @RequestBody CalificacionRequestDTO request) {
         politicoService.addCalificacion(id, request);
     }
 }

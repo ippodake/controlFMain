@@ -9,7 +9,7 @@ const DirectorioLeyesPage: React.FC = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [termino, setTermino] = useState('');
-  const [filtros, setFiltros] = useState([
+  const [filtros, setFiltros] = useState<Array<{ id: string; label: string; valorSeleccionado: string | null; opciones: string[] }>>([
     { id: 'categoria', label: 'Categoría', valorSeleccionado: null, opciones: [] },
     { id: 'estado', label: 'Estado', valorSeleccionado: null, opciones: [] },
   ]);

@@ -7,7 +7,7 @@ interface ContenidoLeyProps {
   impactoSocial: string;
 }
 
-const ContenidoLey: React.FC<ContenidoLeyProps> = ({ titulo, resumenEjecutivo, impactoSocial }) => {
+const ContenidoLey: React.FC<ContenidoLeyProps> = ({ resumenEjecutivo, impactoSocial }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
       <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">

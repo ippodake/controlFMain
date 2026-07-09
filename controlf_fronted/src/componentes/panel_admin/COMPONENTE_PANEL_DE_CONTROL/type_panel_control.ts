@@ -13,7 +13,7 @@
  *   ]
  * }
  */
-interface PanelControl {
+export interface PanelControl {
   tituloSeccion: string;
   opciones: {
     nombreOpcion: string;

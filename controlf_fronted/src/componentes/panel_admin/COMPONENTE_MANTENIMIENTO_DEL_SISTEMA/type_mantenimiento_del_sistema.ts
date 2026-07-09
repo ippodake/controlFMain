@@ -6,7 +6,7 @@
  * - POST /api/admin/mantenimiento/limpiar-cache -> (Sin Body)
  * - POST /api/admin/importar-leyes -> (Sin Body)
  */
-interface PanelMantenimientoServidor {
+export interface PanelMantenimientoServidor {
   id: string;
   titulo: string;
   codigoReferencia: string;

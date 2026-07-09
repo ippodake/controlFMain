@@ -10,9 +10,9 @@
  *   "totalPaginas": number
  * }
  */
-interface GrillaPoliticos {
+export interface GrillaPoliticos {
   id: string;                  // Identificador de la grilla
-  cartas: CartaPolitico[];     // Lista de tarjetas (ver type_carta_politico.ts)
+  cartas: import('../Componente carta politico/type_carta_politico').CartaPolitico[];     // Lista de tarjetas (ver type_carta_politico.ts)
   paginaActual: number;        // Página actual
   totalPaginas: number;        // Total de páginas
 }

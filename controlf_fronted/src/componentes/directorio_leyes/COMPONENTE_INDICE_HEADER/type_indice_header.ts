@@ -1,4 +1,4 @@
-interface IndiceHeader {
+export interface IndiceHeader {
   id: string;
   secciones: {
     nombre: string;

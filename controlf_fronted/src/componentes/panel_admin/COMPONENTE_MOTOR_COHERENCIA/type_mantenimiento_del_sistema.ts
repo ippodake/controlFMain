@@ -11,7 +11,7 @@
  *     "analisis": string 
  *   }
  */
-interface PanelMantenimientoServidor {
+export interface PanelMantenimientoServidor {
   id: string;
   titulo: string;
   codigoReferencia: string;

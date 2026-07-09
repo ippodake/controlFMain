@@ -1,4 +1,4 @@
-interface FilaAuditoria {
+export interface FilaAuditoria {
   id: string;                    // Identificador único del político
   nombre: string;                // Nombre del político
   fotoUrl: string;               // URL del avatar

@@ -1,4 +1,4 @@
-interface Paginacion {
+export interface Paginacion {
   id: string;            // Identificador único del componente
   paginaActual: number;  // Página actual
   totalPaginas: number;  // Total de páginas

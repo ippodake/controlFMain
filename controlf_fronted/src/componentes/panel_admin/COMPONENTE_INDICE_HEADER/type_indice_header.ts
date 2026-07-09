@@ -1,4 +1,4 @@
-interface SidebarNavigation {
+export interface SidebarNavigation {
   id: string;                  // Identificador único de la sesión del menú
   nombreApp: string;           // Nombre o título del panel principal (e.g., "PAC ADMIN")
   logoUrl: string;             // URL o referencia del icono principal del escudo

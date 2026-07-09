@@ -4,7 +4,9 @@
  * 
  * Response: CartaPoliticoDTO[]
  */
-interface BarraBusqueda {
+import type { FiltroBusqueda } from './filtro busqueda/type_filtro_busqueda';
+
+export interface BarraBusqueda {
   id: string;                  // Identificador de la barra
   titulo: string;              // Título principal de la página
   subtitulo: string;           // Descripción debajo del título

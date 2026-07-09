@@ -4,7 +4,7 @@
  * 
  * Response: ExpedienteLegislativoDTO[]
  */
-interface DirectorioPropuestas {
+export interface DirectorioPropuestas {
   id: string;
   terminoBusqueda: string;
   categoriaId: string | null;

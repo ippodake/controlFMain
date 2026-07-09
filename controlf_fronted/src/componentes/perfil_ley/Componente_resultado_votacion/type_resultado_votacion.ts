@@ -11,7 +11,7 @@
  *   "valorPrincipal": number
  * }
  */
-interface ResultadoVotacion {
+export interface ResultadoVotacion {
   id: string;
   titulo: string;
   valorPrincipal: number;

@@ -4,6 +4,7 @@ import com.controlf.dto.PanelControlDTO;
 import com.controlf.dto.PanelMantenimientoDTO;
 import com.controlf.dto.VinculoRequestDTO;
 import com.controlf.service.AdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -44,7 +45,7 @@ public class AdminController {
     }
 
     @PostMapping("/vinculos")
-    public void postVinculo(@RequestBody VinculoRequestDTO request) {
+    public void postVinculo(@Valid @RequestBody VinculoRequestDTO request) {
         adminService.crearVinculoCoherencia(request);
     }
 

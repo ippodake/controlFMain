@@ -29,6 +29,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -155,6 +157,45 @@ return objectMapper.readValue(response.body(),
         log.info("Importación seleccionada finalizada: encontradas={} importadas={} ignoradas={} duplicadas={}",
                 found, imported, ignored, duplicates);
         return new ImportResultDTO(found, imported, ignored, duplicates);
+    }
+
+    public ImportResultDTO importLeyesForPoliticos(List<Integer> politicoIds) {
+        log.info("Iniciando importación por candidatos: {}", politicoIds);
+        if (politicoIds == null || politicoIds.isEmpty()) {
+            throw new RuntimeException("Debe seleccionar al menos un político");
+        }
+
+        int imported = 0;
+        int duplicates = 0;
+        int ignored = 0;
+
+        Map<Integer, Politico> politicos = politicoRepository.findAllById(politicoIds).stream()
+                .collect(Collectors.toMap(Politico::getId, politico -> politico));
+
+        for (Integer politicoId : politicoIds) {
+            Politico politico = politicos.get(politicoId);
+            if (politico == null) {
+                continue;
+            }
+
+            List<AssemblyMemberDTO> members = getAssemblyMembers();
+            AssemblyMemberDTO member = members.stream()
+                    .filter(m -> politico.getNombreCompleto() != null && (m.getFirstName() + " " + m.getLastname()).trim().equalsIgnoreCase(politico.getNombreCompleto().trim()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (member == null) {
+                ignored++;
+                continue;
+            }
+
+            ImportResultDTO result = importVotings(member.getId());
+            imported += result.getImported();
+            duplicates += result.getDuplicates();
+            ignored += result.getIgnored();
+        }
+
+        return new ImportResultDTO(politicoIds.size(), imported, ignored, duplicates);
     }
 
     public ImportResultDTO importVotings(Long assemblyMemberId) {

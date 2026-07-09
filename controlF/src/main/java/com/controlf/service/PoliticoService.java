@@ -88,6 +88,12 @@ public class PoliticoService {
         }
     }
 
+    public List<com.controlf.dto.SimpleItemDTO> getPoliticosImportables() {
+        return politicoRepository.findAll().stream()
+                .map(PoliticoService::mapToSimpleItemDTO)
+                .collect(Collectors.toList());
+    }
+
     public com.controlf.dto.GrillaPoliticosDTO getPoliticosFiltrados(int pagina, int size, String nombre, String partido, String region, String comision) {
         try {
             org.springframework.data.jpa.domain.Specification<Politico> spec = (root, query, cb) -> cb.conjunction();
@@ -108,7 +114,7 @@ public class PoliticoService {
             org.springframework.data.domain.Page<Politico> page = politicoRepository.findAll(spec, org.springframework.data.domain.PageRequest.of(Math.max(0, pagina - 1), size));
             
             List<CartaPoliticoDTO> cartas = page.getContent().stream()
-                    .map(this::mapToCartaDTO)
+                    .map(PoliticoService::mapToCartaDTO)
                     .collect(Collectors.toList());
 
             return com.controlf.dto.GrillaPoliticosDTO.builder()
@@ -130,7 +136,7 @@ public class PoliticoService {
 
     public List<CartaPoliticoDTO> getAllPoliticosAsCartas() {
         return politicoRepository.findAll().stream()
-                .map(this::mapToCartaDTO)
+                .map(PoliticoService::mapToCartaDTO)
                 .collect(Collectors.toList());
     }
 
@@ -163,10 +169,9 @@ public class PoliticoService {
         politicoRepository.save(p);
     }
 
-    private CartaPoliticoDTO mapToCartaDTO(Politico p) {
-        Double coherencia = vinculoRepository.findAverageCoherenciaByPoliticoId(p.getId());
-        long proyectos = leyRepository.countByProponente(p.getNombreCompleto());
-
+    private static CartaPoliticoDTO mapToCartaDTO(Politico p) {
+        Double coherencia = null;
+        long proyectos = 0L;
         return CartaPoliticoDTO.builder()
                 .id(p.getId().toString())
                 .nombre(p.getNombreCompleto())
@@ -175,7 +180,14 @@ public class PoliticoService {
                 .estaActivo(p.getEstaActivo())
                 .porcentajeCoherencia(coherencia != null ? coherencia : 0.0)
                 .cantidadProyectos(proyectos)
-                .estadoEtiqueta(determineEstadoEtiqueta(coherencia))
+                .estadoEtiqueta("SIN DATOS")
+                .build();
+    }
+
+    private static com.controlf.dto.SimpleItemDTO mapToSimpleItemDTO(Politico p) {
+        return com.controlf.dto.SimpleItemDTO.builder()
+                .id(p.getId().toString())
+                .label(p.getNombreCompleto())
                 .build();
     }
 

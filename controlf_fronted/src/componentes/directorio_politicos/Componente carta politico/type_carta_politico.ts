@@ -8,7 +8,7 @@
  * - POST /api/politicos/{id}/calificaciones
  *   Body: { "puntaje": number, "usuarioId": number }
  */
-interface CartaPolitico {
+export interface CartaPolitico {
   id: string;                    // Identificador único del político
   nombre: string;                // Nombre completo
   organizacion: string;          // Movimiento o partido
