@@ -40,49 +40,63 @@ public class LeyService {
         return buildFiltrosLeyDTO();
     }
 
-    public GrillaLeyesDTO getLeyesFiltradas(int pagina, int size, String termino, String categoria, String estado) {
-        try {
-            org.springframework.data.jpa.domain.Specification<Ley> spec = (root, query, cb) -> cb.conjunction();
+  public GrillaLeyesDTO getLeyesFiltradas(int pagina, int size, String termino, String categoria, String estado) {
+    try {
+        org.springframework.data.jpa.domain.Specification<Ley> spec = (root, query, cb) -> cb.conjunction();
 
-            if (termino != null && !termino.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.or(
+        if (termino != null && !termino.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.or(
                     cb.like(cb.lower(root.get("titulo")), "%" + termino.toLowerCase() + "%"),
                     cb.like(cb.lower(root.get("codigo")), "%" + termino.toLowerCase() + "%")
-                ));
-            }
-            if (categoria != null && !categoria.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.equal(root.get("categoria"), categoria));
-            }
-            if (estado != null && !estado.isEmpty()) {
-                try {
-                    spec = spec.and((root, query, cb) -> cb.equal(root.get("estado"), EstadoLey.valueOf(estado.toUpperCase())));
-                } catch (IllegalArgumentException e) {
-                    // Estado inválido, ignorar filtro
-                }
-            }
-
-            org.springframework.data.domain.Page<Ley> page = leyRepository.findAll(spec, org.springframework.data.domain.PageRequest.of(Math.max(0, pagina - 1), size));
-
-            List<ExpedienteLegislativoDTO> leyes = page.getContent().stream()
-                    .map(LeyService::mapToExpedienteDTO)
-                    .collect(Collectors.toList());
-
-            return GrillaLeyesDTO.builder()
-                    .id("grilla-leyes")
-                    .leyes(leyes)
-                    .paginaActual(pagina)
-                    .totalPaginas(Math.max(1, page.getTotalPages()))
-                    .build();
-        } catch (Exception e) {
-            return GrillaLeyesDTO.builder()
-                    .id("grilla-leyes")
-                    .leyes(java.util.List.of())
-                    .paginaActual(1)
-                    .totalPaginas(1)
-                    .build();
+            ));
         }
-    }
 
+        if (categoria != null && !categoria.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("categoria"), categoria));
+        }
+
+        if (estado != null && !estado.isEmpty()) {
+            try {
+                spec = spec.and((root, query, cb) ->
+                        cb.equal(root.get("estado"), EstadoLey.valueOf(estado.toUpperCase())));
+            } catch (IllegalArgumentException e) {
+                // Estado inválido, ignorar filtro
+            }
+        }
+
+        org.springframework.data.domain.Page<Ley> page = leyRepository.findAll(
+                spec,
+                org.springframework.data.domain.PageRequest.of(
+                        Math.max(0, pagina - 1),
+                        size,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC,
+                                "id"
+                        )
+                )
+        );
+
+        List<ExpedienteLegislativoDTO> leyes = page.getContent().stream()
+                .map(LeyService::mapToExpedienteDTO)
+                .collect(Collectors.toList());
+
+        return GrillaLeyesDTO.builder()
+                .id("grilla-leyes")
+                .leyes(leyes)
+                .paginaActual(pagina)
+                .totalPaginas(Math.max(1, page.getTotalPages()))
+                .build();
+
+    } catch (Exception e) {
+        return GrillaLeyesDTO.builder()
+                .id("grilla-leyes")
+                .leyes(java.util.List.of())
+                .paginaActual(1)
+                .totalPaginas(1)
+                .build();
+    }
+}
     public PerfilLeyDTO getFullPerfilLey(Integer id) {
         return PerfilLeyDTO.builder()
                 .contenido(getContenidoLey(id))

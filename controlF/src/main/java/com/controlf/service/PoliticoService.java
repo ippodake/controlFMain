@@ -108,51 +108,73 @@ public class PoliticoService {
                 .collect(Collectors.toList());
     }
 
-    public com.controlf.dto.GrillaPoliticosDTO getPoliticosFiltrados(int pagina, int size, String nombre, String partido, String region, String comision) {
-        try {
-            org.springframework.data.jpa.domain.Specification<Politico> spec = (root, query, cb) -> cb.conjunction();
-            
-            if (nombre != null && !nombre.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("nombreCompleto")), "%" + nombre.toLowerCase() + "%"));
-            }
-            if (partido != null && !partido.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.equal(root.get("partidoPolitico"), partido));
-            }
-            if (region != null && !region.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.equal(root.get("region"), region));
-            }
-            if (comision != null && !comision.isEmpty()) {
-                spec = spec.and((root, query, cb) -> cb.equal(root.get("comision"), comision));
-            }
+public com.controlf.dto.GrillaPoliticosDTO getPoliticosFiltrados(int pagina, int size, String nombre, String partido, String region, String comision) {
+    try {
+        org.springframework.data.jpa.domain.Specification<Politico> spec = (root, query, cb) -> cb.conjunction();
 
-            org.springframework.data.domain.Page<Politico> page = politicoRepository.findAll(spec, org.springframework.data.domain.PageRequest.of(Math.max(0, pagina - 1), size));
-            
-            List<CartaPoliticoDTO> cartas = page.getContent().stream()
-                    .map(PoliticoService::mapToCartaDTO)
-                    .collect(Collectors.toList());
-
-            return com.controlf.dto.GrillaPoliticosDTO.builder()
-                    .id("grilla-politicos")
-                    .cartas(cartas)
-                    .paginaActual(pagina)
-                    .totalPaginas(Math.max(1, page.getTotalPages()))
-                    .build();
-        } catch (Exception e) {
-            e.printStackTrace(); // Para ver el error real en logs
-            return com.controlf.dto.GrillaPoliticosDTO.builder()
-                    .id("grilla-politicos")
-                    .cartas(java.util.List.of())
-                    .paginaActual(1)
-                    .totalPaginas(1)
-                    .build();
+        if (nombre != null && !nombre.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("nombreCompleto")), "%" + nombre.toLowerCase() + "%"));
         }
-    }
 
-    public List<CartaPoliticoDTO> getAllPoliticosAsCartas() {
-        return politicoRepository.findAll().stream()
+        if (partido != null && !partido.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("partidoPolitico"), partido));
+        }
+
+        if (region != null && !region.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("region"), region));
+        }
+
+        if (comision != null && !comision.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("comision"), comision));
+        }
+
+        org.springframework.data.domain.Page<Politico> page = politicoRepository.findAll(
+                spec,
+                org.springframework.data.domain.PageRequest.of(
+                        Math.max(0, pagina - 1),
+                        size,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC,
+                                "id"
+                        )
+                )
+        );
+
+        List<CartaPoliticoDTO> cartas = page.getContent().stream()
                 .map(PoliticoService::mapToCartaDTO)
                 .collect(Collectors.toList());
+
+        return com.controlf.dto.GrillaPoliticosDTO.builder()
+                .id("grilla-politicos")
+                .cartas(cartas)
+                .paginaActual(pagina)
+                .totalPaginas(Math.max(1, page.getTotalPages()))
+                .build();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return com.controlf.dto.GrillaPoliticosDTO.builder()
+                .id("grilla-politicos")
+                .cartas(java.util.List.of())
+                .paginaActual(1)
+                .totalPaginas(1)
+                .build();
     }
+}
+  public List<CartaPoliticoDTO> getAllPoliticosAsCartas() {
+    return politicoRepository.findAll(
+            org.springframework.data.domain.Sort.by(
+                    org.springframework.data.domain.Sort.Direction.DESC,
+                    "id"
+            )
+    ).stream()
+     .map(PoliticoService::mapToCartaDTO)
+     .collect(Collectors.toList());
+}
 
     @Transactional
     public void actualizarCampoPolitico(Integer politicoId, ActualizarCampoPoliticoRequestDTO request) {
